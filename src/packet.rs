@@ -279,7 +279,6 @@ impl Packet {
             padding,
             extension,
             marker,
-            payload_offset,
             payload_type,
             sequence_number,
             timestamp,
@@ -287,9 +286,29 @@ impl Packet {
             csrc,
             extension_profile,
             extension_payload,
+            payload_offset,
             payload,
             raw,
         })
+    }
+}
+
+impl Eq for Packet {}
+
+impl PartialEq for Packet {
+    fn eq(&self, other: &Self) -> bool {
+        self.version == other.version
+            && self.extension == other.extension
+            && self.extension_profile == other.extension_profile
+            && self.extension_payload == other.extension_payload
+            && self.payload_offset == other.payload_offset
+            && self.payload_type == other.payload_type
+            && self.sequence_number == other.sequence_number
+            && self.timestamp == other.timestamp
+            && self.ssrc == other.ssrc
+            && self.csrc == other.csrc
+            && self.payload == other.payload
+            && self.raw == other.raw
     }
 }
 
@@ -308,7 +327,27 @@ mod tests {
             0x90, 0xe0, 0x69, 0x8f, 0xd9, 0xc2, 0x93, 0xda, 0x1c, 0x64, 0x27, 0x82, 0x00, 0x01,
             0x00, 0x01, 0xff, 0xff, 0xff, 0xff, 0x98, 0x36, 0xbe, 0x88, 0x9e,
         ];
+        let packet = Packet {
+            version: 2,
+            padding: false,
+            extension: true,
+            marker: true,
+            payload_type: 96,
+            sequence_number: 27023,
+            timestamp: 3653407706,
+            ssrc: 476325762,
+            csrc: Vec::new(),
+            extension_profile: Some(1),
+            extension_payload: Some(vec![0xff, 0xff, 0xff, 0xff]),
+            payload_offset: 20,
+            payload: Vec::from(&raw_packet[20..]),
+            raw: Vec::from(&raw_packet[..])
+        };
 
-        assert!(Packet::from_raw(&raw_packet).is_ok());
+        let parsed = Packet::from_raw(&raw_packet);
+        assert!(parsed.is_ok());
+
+        let parsed = parsed.unwrap();
+        assert_eq!(packet, parsed);
     }
 }
