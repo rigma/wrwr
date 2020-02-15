@@ -503,4 +503,64 @@ mod tests {
         let parsed = parsed.unwrap();
         assert_eq!(packet, parsed);
     }
+
+    #[test]
+    fn it_marshalls_a_packet_without_an_extension() {
+        let raw_packet: [u8; 21] = [
+            0x80, 0xe0, 0x69, 0x8f, 0xd9, 0xc2, 0x93, 0xda, 0x1c, 0x64, 0x27, 0x82, 0x00, 0x01,
+            0x00, 0x01, 0x98, 0x36, 0xbe, 0x88, 0x9e,
+        ];
+        let packet = Packet {
+            version: 2,
+            padding: false,
+            extension: false,
+            marker: true,
+            payload_type: 96,
+            sequence_number: 27023,
+            timestamp: 3653407706,
+            ssrc: 476325762,
+            csrc: Vec::new(),
+            extension_profile: None,
+            extension_payload: None,
+            payload_offset: 12,
+            payload: Vec::from(&raw_packet[12..]),
+            raw: Some(Vec::from(&raw_packet[..]))
+        };
+
+        let export = packet.to_raw();
+        assert!(export.is_ok());
+
+        let export = export.unwrap();
+        assert_eq!(export, raw_packet);
+    }
+
+    #[test]
+    fn it_marshalls_a_packet_with_an_extension() {
+        let raw_packet: [u8; 25] = [
+            0x90, 0xe0, 0x69, 0x8f, 0xd9, 0xc2, 0x93, 0xda, 0x1c, 0x64, 0x27, 0x82, 0x00, 0x01,
+            0x00, 0x01, 0xff, 0xff, 0xff, 0xff, 0x98, 0x36, 0xbe, 0x88, 0x9e,
+        ];
+        let packet = Packet {
+            version: 2,
+            padding: false,
+            extension: true,
+            marker: true,
+            payload_type: 96,
+            sequence_number: 27023,
+            timestamp: 3653407706,
+            ssrc: 476325762,
+            csrc: Vec::new(),
+            extension_profile: Some(1),
+            extension_payload: Some(vec![0xff, 0xff, 0xff, 0xff]),
+            payload_offset: 20,
+            payload: Vec::from(&raw_packet[20..]),
+            raw: Some(Vec::from(&raw_packet[..]))
+        };
+
+        let export = packet.to_raw();
+        assert!(export.is_ok());
+
+        let export = export.unwrap();
+        assert_eq!(export, raw_packet);
+    }
 }
