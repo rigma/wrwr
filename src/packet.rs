@@ -297,6 +297,22 @@ impl Packet {
             raw,
         })
     }
+
+    /// Computes the marshalled packet header's size. 
+    pub fn marshalled_header_size(&self) -> usize {
+        let mut size = 12 + self.csrc.len() * CSRC_LENGTH;
+
+        if let Some(payload) = &self.extension_payload {
+            size += 4 + payload.len();
+        }
+
+        size
+    }
+
+    /// Computes the marshalled packet's size.
+    pub fn marshalled_packet_size(&self) -> usize {
+        self.marshalled_header_size() + self.payload.len()
+    }
 }
 
 impl Eq for Packet {}
