@@ -185,8 +185,8 @@ pub struct Packet {
 }
 
 impl Packet {
-    /// Instanciates an RTP packet from a raw byte's array. If the method is
-    /// not able to instanciates the packet, this function will return an error.
+    /// Transforms a marshalled RTP packet into a parsed representation which can be used
+    /// with the library. If the unmarshalling process fails, an error will be returned.
     pub fn from_raw(raw_packet: &[u8]) -> Result<Self, ()> {
         // If the packet lenght is lesser than the header's length, we return an error
         if raw_packet.len() < HEADER_LENGHT {
