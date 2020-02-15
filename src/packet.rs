@@ -204,23 +204,26 @@ impl Packet {
         let payload_type = raw_packet[1] & PAYLOAD_TYPE_MASK;
 
         // Decoding the sequence number
-        let sequence_number: u16 =
-            (raw_packet[SEQ_NUM_OFFSET] as u16) << 8 | raw_packet[SEQ_NUM_OFFSET + 1] as u16;
-        let sequence_number = sequence_number.to_be();
+        let sequence_number: [u8; 2] = [raw_packet[SEQ_NUM_OFFSET], raw_packet[SEQ_NUM_OFFSET + 1]];
+        let sequence_number = u16::from_be_bytes(sequence_number);
 
         // Decoding the timestamp
-        let timestamp: u32 = (raw_packet[TIMESTAMP_OFFSET] as u32) << 24
-            | (raw_packet[TIMESTAMP_OFFSET + 1] as u32) << 16
-            | (raw_packet[TIMESTAMP_OFFSET + 2] as u32) << 8
-            | (raw_packet[SSRC_OFFSET + 3] as u32);
-        let timestamp = timestamp.to_be();
+        let timestamp: [u8; 4] = [
+            raw_packet[TIMESTAMP_OFFSET],
+            raw_packet[TIMESTAMP_OFFSET + 1],
+            raw_packet[TIMESTAMP_OFFSET + 2],
+            raw_packet[TIMESTAMP_OFFSET + 3]
+        ];
+        let timestamp = u32::from_be_bytes(timestamp);
 
         // Decoding the synchronization source
-        let ssrc: u32 = (raw_packet[SSRC_OFFSET] as u32) << 24
-            | (raw_packet[SSRC_OFFSET + 1] as u32) << 16
-            | (raw_packet[SSRC_OFFSET + 2] as u32) << 8
-            | (raw_packet[SSRC_OFFSET + 3] as u32);
-        let ssrc = ssrc.to_be();
+        let ssrc: [u8; 4] = [
+            raw_packet[SSRC_OFFSET],
+            raw_packet[SSRC_OFFSET + 1],
+            raw_packet[SSRC_OFFSET + 2],
+            raw_packet[SSRC_OFFSET + 3]
+        ];
+        let ssrc = u32::from_be_bytes(ssrc);
 
         // Computing the current payload offset
         let mut payload_offset = CSRC_OFFSET + CSRC_LENGTH * cc;
@@ -232,11 +235,14 @@ impl Packet {
         let csrc = (0..cc)
             .map(|i| {
                 let offset = CSRC_OFFSET + CSRC_LENGTH * i;
+                let raw: [u8; 4] = [
+                    raw_packet[offset],
+                    raw_packet[offset + 1],
+                    raw_packet[offset + 2],
+                    raw_packet[offset + 3]
+                ];
 
-                (raw_packet[offset] as u32) << 24
-                    | (raw_packet[offset + 1] as u32) << 16
-                    | (raw_packet[offset + 2] as u32) << 8
-                    | (raw_packet[offset + 3] as u32)
+                u32::from_be_bytes(raw)
             })
             .collect();
 
