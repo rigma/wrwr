@@ -97,7 +97,7 @@ pub struct Packet {
     /// audio tool.
     ///
     /// [RFC 3550]: https://tools.ietf.org/html/rfc3550
-    pub version: u16,
+    pub version: u8,
 
     /// The `padding` field is responsible to indicates if the packet contains
     /// one or more additionnal padding bytes at the end which are not part of
@@ -181,7 +181,7 @@ pub struct Packet {
     pub payload: Vec<u8>,
 
     /// The raw representation of the current RTP packet (headers + payload)
-    pub raw: Vec<u8>,
+    pub raw: Option<Vec<u8>>,
 }
 
 impl Packet {
@@ -194,7 +194,7 @@ impl Packet {
         }
 
         // Decoding the first byte of the packet (version, padding, extension and CC count)
-        let version: u16 = ((raw_packet[0] >> VERSION_SHIFT) & VERSION_MASK) as u16;
+        let version = (raw_packet[0] >> VERSION_SHIFT) & VERSION_MASK;
         let padding = (raw_packet[0] >> PADDING_SHIFT) & PADDING_MASK > 0;
         let extension = (raw_packet[0] >> EXTENSION_SHIFT) & EXTENSION_MASK > 0;
         let cc = (raw_packet[0] & CC_MASK) as usize;
@@ -294,12 +294,113 @@ impl Packet {
             extension_payload,
             payload_offset,
             payload,
-            raw,
+            raw: Some(raw),
         })
     }
 
+    /// Exports the current RTP packet into a marshalled representation suitable
+    /// for network transmission.
+    pub fn to_raw(&self) -> Result<Vec<u8>, ()> {
+        // If a raw representation is already available, we'll return it
+        if let Some(raw) = &self.raw {
+            return Ok(raw.clone());
+        }
+
+        // Instanciating output buffer
+        let mut buffer = Vec::with_capacity(self.packet_size());
+
+        // Setting the first byte of the buffer
+        buffer[0] = (self.version << VERSION_SHIFT) as u8 | self.csrc.len() as u8;
+        if self.padding {
+            buffer[0] |= 1 << PADDING_SHIFT;
+        }
+        if self.extension {
+            buffer[0] |= 1 << EXTENSION_SHIFT;
+        }
+
+        // Setting the second byte of the buffer
+        buffer[1] = self.payload_type;
+        if self.marker {
+            buffer[1] |= 1 << MARKER_SHIFT;
+        }
+
+        // Encoding sequence number, timestamp and synchronization source identifier
+        self.sequence_number.to_be_bytes()
+            .iter()
+            .enumerate()
+            .for_each(|(offset, byte)| buffer[2 + offset] = *byte);
+        self.timestamp.to_be_bytes()
+            .iter()
+            .enumerate()
+            .for_each(|(offset, byte)| buffer[4 + offset] = *byte);
+        self.ssrc.to_be_bytes()
+            .iter()
+            .enumerate()
+            .for_each(|(offset, byte)| buffer[8 + offset] = *byte);
+
+        // Adding contributing source identifiers
+        let mut payload_offset: usize = 12;
+        self.csrc.iter()
+            .for_each(|csrc| {
+                csrc.to_be_bytes()
+                    .iter()
+                    .enumerate()
+                    .for_each(|(offset, byte)| {
+                        buffer[12 + payload_offset + offset] = *byte;
+                    });
+
+                payload_offset += 4;
+            });
+
+        // If there is an extension, we'll add it to the buffer
+        if let (Some(profile), Some(payload)) = (&self.extension_profile, &self.extension_payload) {
+            if payload.len() % 4 > 0 {
+                return Err(());
+            }
+
+            let extension_size = (payload.len() / 4) as u16;
+
+            profile.to_be_bytes()
+                .iter()
+                .enumerate()
+                .for_each(|(offset, byte)| buffer[payload_offset + offset] = *byte);
+            extension_size.to_be_bytes()
+                .iter()
+                .enumerate()
+                .for_each(|(offset, byte)| buffer[payload_offset + offset + 2] = *byte);
+
+            payload_offset += 4;
+            payload.iter()
+                .enumerate()
+                .for_each(|(offset, byte)| buffer[payload_offset + offset] = *byte);
+            payload_offset += payload.len();
+        }
+
+        // Adding the packet payload
+        self.payload.iter()
+            .enumerate()
+            .for_each(|(offset, byte)| buffer[payload_offset + offset] = *byte);
+
+        Ok(buffer)
+    }
+
+    /// Exports the current RTP packet into a marshalled representation suitable for network
+    /// transmission.
+    ///
+    /// This method is similar to `Packet.to_raw`, but it will store the result of the export
+    /// into the current packet if it's not available to avoid further computations.
+    pub fn to_raw_mut(&mut self) -> Result<Vec<u8>, ()> {
+        let buffer = self.to_raw()?;
+
+        if self.raw.is_none() {
+            self.raw = Some(buffer.clone());
+        }
+
+        Ok(buffer)
+    }
+
     /// Computes the marshalled packet header's size. 
-    pub fn marshalled_header_size(&self) -> usize {
+    pub fn header_size(&self) -> usize {
         let mut size = 12 + self.csrc.len() * CSRC_LENGTH;
 
         if let Some(payload) = &self.extension_payload {
@@ -310,8 +411,8 @@ impl Packet {
     }
 
     /// Computes the marshalled packet's size.
-    pub fn marshalled_packet_size(&self) -> usize {
-        self.marshalled_header_size() + self.payload.len()
+    pub fn packet_size(&self) -> usize {
+        self.header_size() + self.payload.len()
     }
 }
 
@@ -363,7 +464,7 @@ mod tests {
             extension_payload: Some(vec![0xff, 0xff, 0xff, 0xff]),
             payload_offset: 20,
             payload: Vec::from(&raw_packet[20..]),
-            raw: Vec::from(&raw_packet[..])
+            raw: Some(Vec::from(&raw_packet[..]))
         };
 
         let parsed = Packet::from_raw(&raw_packet);
