@@ -440,12 +440,42 @@ mod tests {
     use super::*;
 
     #[test]
-    fn it_unmarshall_on_empty_packet_produce_an_error() {
+    fn it_produces_an_error_when_unmarshalling_an_empty_packet() {
         assert!(Packet::from_raw(&vec![]).is_err());
     }
 
     #[test]
-    fn it_unmarshall_a_packet_without_extension() {
+    fn it_unmarshalls_a_packet_without_an_extension() {
+        let raw_packet: [u8; 21] = [
+            0x80, 0xe0, 0x69, 0x8f, 0xd9, 0xc2, 0x93, 0xda, 0x1c, 0x64, 0x27, 0x82, 0x00, 0x01,
+            0x00, 0x01, 0x98, 0x36, 0xbe, 0x88, 0x9e,
+        ];
+        let packet = Packet {
+            version: 2,
+            padding: false,
+            extension: false,
+            marker: true,
+            payload_type: 96,
+            sequence_number: 27023,
+            timestamp: 3653407706,
+            ssrc: 476325762,
+            csrc: Vec::new(),
+            extension_profile: None,
+            extension_payload: None,
+            payload_offset: 12,
+            payload: Vec::from(&raw_packet[12..]),
+            raw: Some(Vec::from(&raw_packet[..]))
+        };
+
+        let parsed = Packet::from_raw(&raw_packet);
+        assert!(parsed.is_ok());
+
+        let parsed = parsed.unwrap();
+        assert_eq!(packet, parsed);
+    }
+
+    #[test]
+    fn it_unmarshalls_a_packet_with_an_extension() {
         let raw_packet: [u8; 25] = [
             0x90, 0xe0, 0x69, 0x8f, 0xd9, 0xc2, 0x93, 0xda, 0x1c, 0x64, 0x27, 0x82, 0x00, 0x01,
             0x00, 0x01, 0xff, 0xff, 0xff, 0xff, 0x98, 0x36, 0xbe, 0x88, 0x9e,
