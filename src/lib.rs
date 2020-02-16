@@ -4,6 +4,7 @@
 
 extern crate chrono;
 
+pub mod codecs;
 mod packet;
 mod packetizer;
 mod payload_generator;
