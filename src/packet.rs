@@ -212,7 +212,7 @@ impl Packet {
             raw_packet[TIMESTAMP_OFFSET],
             raw_packet[TIMESTAMP_OFFSET + 1],
             raw_packet[TIMESTAMP_OFFSET + 2],
-            raw_packet[TIMESTAMP_OFFSET + 3]
+            raw_packet[TIMESTAMP_OFFSET + 3],
         ];
         let timestamp = u32::from_be_bytes(timestamp);
 
@@ -221,7 +221,7 @@ impl Packet {
             raw_packet[SSRC_OFFSET],
             raw_packet[SSRC_OFFSET + 1],
             raw_packet[SSRC_OFFSET + 2],
-            raw_packet[SSRC_OFFSET + 3]
+            raw_packet[SSRC_OFFSET + 3],
         ];
         let ssrc = u32::from_be_bytes(ssrc);
 
@@ -239,7 +239,7 @@ impl Packet {
                     raw_packet[offset],
                     raw_packet[offset + 1],
                     raw_packet[offset + 2],
-                    raw_packet[offset + 3]
+                    raw_packet[offset + 3],
                 ];
 
                 u32::from_be_bytes(raw)
@@ -325,32 +325,34 @@ impl Packet {
         }
 
         // Encoding sequence number, timestamp and synchronization source identifier
-        self.sequence_number.to_be_bytes()
+        self.sequence_number
+            .to_be_bytes()
             .iter()
             .enumerate()
             .for_each(|(offset, byte)| buffer[2 + offset] = *byte);
-        self.timestamp.to_be_bytes()
+        self.timestamp
+            .to_be_bytes()
             .iter()
             .enumerate()
             .for_each(|(offset, byte)| buffer[4 + offset] = *byte);
-        self.ssrc.to_be_bytes()
+        self.ssrc
+            .to_be_bytes()
             .iter()
             .enumerate()
             .for_each(|(offset, byte)| buffer[8 + offset] = *byte);
 
         // Adding contributing source identifiers
         let mut payload_offset: usize = 12;
-        self.csrc.iter()
-            .for_each(|csrc| {
-                csrc.to_be_bytes()
-                    .iter()
-                    .enumerate()
-                    .for_each(|(offset, byte)| {
-                        buffer[12 + payload_offset + offset] = *byte;
-                    });
+        self.csrc.iter().for_each(|csrc| {
+            csrc.to_be_bytes()
+                .iter()
+                .enumerate()
+                .for_each(|(offset, byte)| {
+                    buffer[12 + payload_offset + offset] = *byte;
+                });
 
-                payload_offset += 4;
-            });
+            payload_offset += 4;
+        });
 
         // If there is an extension, we'll add it to the buffer
         if let (Some(profile), Some(payload)) = (&self.extension_profile, &self.extension_payload) {
@@ -360,24 +362,28 @@ impl Packet {
 
             let extension_size = (payload.len() / 4) as u16;
 
-            profile.to_be_bytes()
+            profile
+                .to_be_bytes()
                 .iter()
                 .enumerate()
                 .for_each(|(offset, byte)| buffer[payload_offset + offset] = *byte);
-            extension_size.to_be_bytes()
+            extension_size
+                .to_be_bytes()
                 .iter()
                 .enumerate()
                 .for_each(|(offset, byte)| buffer[payload_offset + offset + 2] = *byte);
 
             payload_offset += 4;
-            payload.iter()
+            payload
+                .iter()
                 .enumerate()
                 .for_each(|(offset, byte)| buffer[payload_offset + offset] = *byte);
             payload_offset += payload.len();
         }
 
         // Adding the packet payload
-        self.payload.iter()
+        self.payload
+            .iter()
             .enumerate()
             .for_each(|(offset, byte)| buffer[payload_offset + offset] = *byte);
 
@@ -399,7 +405,7 @@ impl Packet {
         Ok(buffer)
     }
 
-    /// Computes the marshalled packet header's size. 
+    /// Computes the marshalled packet header's size.
     pub fn header_size(&self) -> usize {
         let mut size = 12 + self.csrc.len() * CSRC_LENGTH;
 
@@ -464,7 +470,7 @@ mod tests {
             extension_payload: None,
             payload_offset: 12,
             payload: Vec::from(&raw_packet[12..]),
-            raw: Some(Vec::from(&raw_packet[..]))
+            raw: Some(Vec::from(&raw_packet[..])),
         };
 
         let parsed = Packet::from_raw(&raw_packet);
@@ -494,7 +500,7 @@ mod tests {
             extension_payload: Some(vec![0xff, 0xff, 0xff, 0xff]),
             payload_offset: 20,
             payload: Vec::from(&raw_packet[20..]),
-            raw: Some(Vec::from(&raw_packet[..]))
+            raw: Some(Vec::from(&raw_packet[..])),
         };
 
         let parsed = Packet::from_raw(&raw_packet);
@@ -524,7 +530,7 @@ mod tests {
             extension_payload: None,
             payload_offset: 12,
             payload: Vec::from(&raw_packet[12..]),
-            raw: Some(Vec::from(&raw_packet[..]))
+            raw: Some(Vec::from(&raw_packet[..])),
         };
 
         let export = packet.to_raw();
@@ -554,7 +560,7 @@ mod tests {
             extension_payload: Some(vec![0xff, 0xff, 0xff, 0xff]),
             payload_offset: 20,
             payload: Vec::from(&raw_packet[20..]),
-            raw: Some(Vec::from(&raw_packet[..]))
+            raw: Some(Vec::from(&raw_packet[..])),
         };
 
         let export = packet.to_raw();
