@@ -30,8 +30,8 @@ impl PayloadGenerator for G722PayloadGenerator {
 
 #[cfg(test)]
 mod tests {
-    use rand::RngCore;
     use super::*;
+    use rand::RngCore;
 
     const LENGTH: usize = 10000;
     const MTU: usize = 1500;
@@ -49,7 +49,10 @@ mod tests {
         let payloads = payloads.unwrap();
 
         assert_eq!(payloads.len(), (LENGTH as f64 / MTU as f64).ceil() as usize);
-        assert_eq!(samples[..], payloads.into_iter().flatten().collect::<Vec<_>>()[..]);
+        assert_eq!(
+            samples[..],
+            payloads.into_iter().flatten().collect::<Vec<_>>()[..]
+        );
     }
 
     #[test]
