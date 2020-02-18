@@ -6,7 +6,7 @@ use crate::PayloadGenerator;
 pub struct G711PayloadGenerator;
 
 impl PayloadGenerator for G711PayloadGenerator {
-    fn generate(&self, mtu: usize, payload: &[u8]) -> Option<Vec<Vec<u8>>> {
+    fn generate(&mut self, mtu: usize, payload: &[u8]) -> Option<Vec<Vec<u8>>> {
         if mtu == 0 || payload.len() == 0 {
             return None;
         }
@@ -39,7 +39,7 @@ mod tests {
     #[test]
     fn it_generates_rtp_payloads() {
         let mut samples = [0u8; LENGTH];
-        let generator = G711PayloadGenerator::default();
+        let mut generator = G711PayloadGenerator::default();
 
         rand::thread_rng().fill_bytes(&mut samples);
 
@@ -57,7 +57,7 @@ mod tests {
 
     #[test]
     fn it_returns_no_payload_when_mtu_is_null() {
-        let generator = G711PayloadGenerator::default();
+        let mut generator = G711PayloadGenerator::default();
         let samples = [0x90u8; 3];
 
         let payloads = generator.generate(0, &samples);
@@ -66,7 +66,7 @@ mod tests {
 
     #[test]
     fn it_generates_packets_according_to_mtu() {
-        let generator = G711PayloadGenerator::default();
+        let mut generator = G711PayloadGenerator::default();
         let samples = [0x90u8; 3];
 
         let payloads = generator.generate(1, &samples).unwrap();

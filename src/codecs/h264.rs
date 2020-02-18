@@ -117,7 +117,7 @@ impl H264PayloadGenerator {
 }
 
 impl PayloadGenerator for H264PayloadGenerator {
-    fn generate(&self, mtu: usize, payload: &[u8]) -> Option<Vec<Vec<u8>>> {
+    fn generate(&mut self, mtu: usize, payload: &[u8]) -> Option<Vec<Vec<u8>>> {
         if payload.len() == 0 {
             return None;
         }
@@ -170,7 +170,7 @@ mod tests {
 
     #[test]
     fn it_generates_rtp_payload_from_small_h264_data() {
-        let generator = H264PayloadGenerator::default();
+        let mut generator = H264PayloadGenerator::default();
         let payload = [0x90u8; 3];
 
         let payloads = generator.generate(5, &payload);
@@ -183,7 +183,7 @@ mod tests {
 
     #[test]
     fn it_generates_multiple_rtp_payloads_from_h264_data() {
-        let generator = H264PayloadGenerator::default();
+        let mut generator = H264PayloadGenerator::default();
         let payload = [
             0x00u8, 0x00u8, 0x01u8, 0x90u8, 0x00u8, 0x00u8, 0x01u8, 0x90u8,
         ];
@@ -201,7 +201,7 @@ mod tests {
 
     #[test]
     fn it_returns_none_for_empty_payload() {
-        let generator = H264PayloadGenerator::default();
+        let mut generator = H264PayloadGenerator::default();
 
         let payloads = generator.generate(5, &[]);
         assert!(payloads.is_none());
@@ -209,7 +209,7 @@ mod tests {
 
     #[test]
     fn it_returns_none_for_null_mtu() {
-        let generator = H264PayloadGenerator::default();
+        let mut generator = H264PayloadGenerator::default();
         let payload = [0x90u8; 3];
 
         let payloads = generator.generate(0, &payload);
@@ -218,7 +218,7 @@ mod tests {
 
     #[test]
     fn it_returns_none_for_ignored_nal_types() {
-        let generator = H264PayloadGenerator::default();
+        let mut generator = H264PayloadGenerator::default();
         let payload = [0x09u8, 0x00u8, 0x00u8];
 
         let payloads = generator.generate(5, &payload);

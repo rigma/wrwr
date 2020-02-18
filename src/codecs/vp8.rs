@@ -8,7 +8,7 @@ const VP8_HEADER_SIZE: usize = 1;
 pub struct VP8PayloadGenerator;
 
 impl PayloadGenerator for VP8PayloadGenerator {
-    fn generate(&self, mtu: usize, payload: &[u8]) -> Option<Vec<Vec<u8>>> {
+    fn generate(&mut self, mtu: usize, payload: &[u8]) -> Option<Vec<Vec<u8>>> {
         if mtu <= VP8_HEADER_SIZE {
             return None;
         }
@@ -52,7 +52,7 @@ mod tests {
 
     #[test]
     fn it_generates_rtp_payload() {
-        let generator = VP8PayloadGenerator::default();
+        let mut generator = VP8PayloadGenerator::default();
         let payload = [0x90u8; 3];
 
         let payloads = generator.generate(VP8_HEADER_SIZE + 1, &payload);
@@ -65,7 +65,7 @@ mod tests {
 
     #[test]
     fn it_returns_none_when_payload_is_empty() {
-        let generator = VP8PayloadGenerator::default();
+        let mut generator = VP8PayloadGenerator::default();
 
         let payloads = generator.generate(2, &[]);
         assert!(payloads.is_none());
@@ -73,7 +73,7 @@ mod tests {
 
     #[test]
     fn it_returns_none_when_mtu_is_too_small() {
-        let generator = VP8PayloadGenerator::default();
+        let mut generator = VP8PayloadGenerator::default();
         let payload = [0x90u8; 3];
 
         let payloads = generator.generate(1, &payload);
