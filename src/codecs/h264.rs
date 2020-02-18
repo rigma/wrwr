@@ -70,6 +70,11 @@ impl H264PayloadGenerator {
             let payload_size = max_fragment_size.min(unit_data_remaining);
             let mut payload = Vec::with_capacity(FUA_HEADER_SIZE + payload_size);
 
+            // Initializing payload
+            for _ in 0..FUA_HEADER_SIZE + payload_size {
+                payload.push(0x00);
+            }
+
             // Defining the FUA header of payload following this wire:
             //
             // +---------------+
@@ -164,7 +169,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn it_generate_rtp_payload_from_small_h264_data() {
+    fn it_generates_rtp_payload_from_small_h264_data() {
         let generator = H264PayloadGenerator::default();
         let payload = [0x90u8; 3];
 
