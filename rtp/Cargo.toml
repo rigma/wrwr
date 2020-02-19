@@ -1,0 +1,18 @@
+[package]
+name = "rtp"
+version = "0.4.3"
+authors = ["rigma <rigbuntu@gmail.com>"]
+edition = "2018"
+
+[features]
+default = ["g711", "g722", "h264", "opus", "vp8", "vp9"]
+g711 = []
+g722 = []
+h264 = []
+opus = []
+vp8 = []
+vp9 = []
+
+[dependencies]
+chrono = "0.4.10"
+rand = "0.7.3"
