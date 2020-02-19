@@ -9,6 +9,16 @@ pub type OpusPacketizer = Packetizer<crate::codecs::opus::OpusPayloadGenerator>;
 pub type VP8Packetizer = Packetizer<crate::codecs::vp8::VP8PayloadGenerator>;
 pub type VP9Packetizer = Packetizer<crate::codecs::vp9::VP9PayloadGenerator>;
 
+/// List of extension numbers to add to the extension profile of a RTP packet.
+#[derive(Clone, Copy, Debug)]
+pub enum ExtensionNumber {
+    /// AbsSendTime extension, see http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time
+    AbsSendTime(u32),
+
+    /// Unknown extension
+    Unknown,
+}
+
 /// This structure is responsible to packetize payloads that need
 /// to be transmited through an RTP channel.
 #[derive(Clone, Debug)]
@@ -25,6 +35,7 @@ pub struct Packetizer<G: PayloadGenerator + Default> {
     pub synchronization_source: u32,
 
     timestamp: u32,
+    extensions: Vec<ExtensionNumber>,
     generator: G,
     sequencer: Sequencer,
 }
@@ -40,6 +51,7 @@ where
             payload_type,
             synchronization_source: ssrc,
             timestamp: rand::thread_rng().gen(),
+            extensions: Vec::new(),
             generator: G::default(),
             sequencer: Sequencer::new(),
         }
@@ -68,24 +80,54 @@ where
             return None;
         }
 
+        let abs_send_time = self.extensions.iter().fold(None, |current, extension| {
+            if let ExtensionNumber::AbsSendTime(value) = &extension {
+                Some(*value)
+            } else {
+                current
+            }
+        });
+
         let packets: Vec<Packet> = payloads
             .iter()
             .enumerate()
-            .map(|(index, payload)| Packet {
-                version: packet::PACKET_VERSION,
-                padding: false,
-                extension: false,
-                marker: index == payload.len() - 1,
-                payload_type: self.payload_type,
-                sequence_number: self.sequencer.next_sequence_number(),
-                timestamp: self.timestamp,
-                ssrc: self.synchronization_source,
-                csrc: Vec::new(),
-                extension_profile: None,
-                extension_payload: None,
-                payload_offset: packet::HEADER_SIZE,
-                payload: Vec::from(&payload[..]),
-                raw: None,
+            .map(|(index, payload)| {
+                let mut extension = false;
+                let mut extension_profile = None;
+                let mut extension_payload = None;
+                let marker = payload.len() - 1 == index;
+
+                if marker {
+                    if let Some(abs_send_time) = &abs_send_time {
+                        let time = get_ntp_time();
+
+                        extension = true;
+                        extension_profile = Some(0xbede);
+                        extension_payload = Some(vec![
+                            ((*abs_send_time << 4) | 2) as u8,
+                            (time & 0xff0000 >> 16) as u8,
+                            (time & 0xff00 >> 8) as u8,
+                            (time & 0xff) as u8,
+                        ]);
+                    }
+                }
+
+                Packet {
+                    version: packet::PACKET_VERSION,
+                    padding: false,
+                    extension,
+                    marker,
+                    payload_type: self.payload_type,
+                    sequence_number: self.sequencer.next_sequence_number(),
+                    timestamp: self.timestamp,
+                    ssrc: self.synchronization_source,
+                    csrc: Vec::new(),
+                    extension_profile,
+                    extension_payload,
+                    payload_offset: packet::HEADER_SIZE,
+                    payload: Vec::from(&payload[..]),
+                    raw: None,
+                }
             })
             .collect();
 
@@ -95,20 +137,21 @@ where
         Some(packets)
     }
 
-    /// Retrieves the current Unix timestamp of the local system
-    /// into its NTP representation.
-    pub fn ntp_time(&self) -> u64 {
-        to_ntp_time(Local::now().timestamp_nanos() as u64)
+    /// Adds an extension number to the packetizer instance.
+    pub fn add_extension_number(&mut self, extension: ExtensionNumber) {
+        self.extensions.push(extension);
     }
 }
 
 /// Converts an Unix epoch, in nanoseconds, into a NTP time.
-fn to_ntp_time(unix_epoch: u64) -> u64 {
-    let s = unix_epoch / 1_000_000_000;
+fn get_ntp_time() -> u64 {
+    let epoch = Local::now().timestamp_nanos() as u64;
+
+    let s = epoch / 1_000_000_000;
     let s = s + 0x83aa7e80;
     let s = s << 32;
 
-    let f = unix_epoch % 1_000_000_000;
+    let f = epoch % 1_000_000_000;
     let f = f << 32;
     let f = f / 1_000_000_000;
 
@@ -118,7 +161,6 @@ fn to_ntp_time(unix_epoch: u64) -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::{FixedOffset, TimeZone};
 
     #[test]
     fn it_packetizes_arbitrary_data() {
@@ -149,22 +191,5 @@ mod tests {
 
         let packets = packetizer.packetize(&[], 2000);
         assert!(packets.is_none());
-    }
-
-    #[test]
-    fn it_converts_an_epoch_into_a_ntp_time() {
-        let time = FixedOffset::west(5 * 3600)
-            .ymd(1985, 6, 23)
-            .and_hms(4, 0, 0);
-        assert_eq!(
-            to_ntp_time(time.timestamp_nanos() as u64),
-            0xa0c65b1000000000
-        );
-
-        let time = Local.ymd(2020, 1, 28).and_hms(11, 34, 23);
-        assert_eq!(
-            to_ntp_time(time.timestamp_nanos() as u64),
-            0xe1da8caf00000000
-        );
     }
 }
