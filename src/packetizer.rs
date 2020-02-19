@@ -66,11 +66,12 @@ where
         let payloads = payloads.unwrap();
         let packets: Vec<Packet> = payloads
             .iter()
-            .map(|payload| Packet {
+            .enumerate()
+            .map(|(index, payload)| Packet {
                 version: packet::PACKET_VERSION,
                 padding: false,
                 extension: false,
-                marker: false,
+                marker: index == payload.len() - 1,
                 payload_type: self.payload_type,
                 sequence_number: self.sequencer.next_sequence_number(),
                 timestamp: self.timestamp,
