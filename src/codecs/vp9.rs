@@ -120,10 +120,7 @@ mod tests {
             picture_id: 0,
             initialized: true,
         };
-        let expected = vec![
-            vec![0x98, 0x80, 0x00, 0x01],
-            vec![0x94, 0x80, 0x00, 0x02],
-        ];
+        let expected = vec![vec![0x98, 0x80, 0x00, 0x01], vec![0x94, 0x80, 0x00, 0x02]];
 
         let payloads = generator.generate(4, &[0x01, 0x02]);
         assert!(payloads.is_some());
@@ -168,9 +165,7 @@ mod tests {
         assert!(payloads.is_some());
         assert_eq!(expected, payloads.unwrap());
 
-        let expected = vec![
-            vec![0x9c, 0x80, 0x01, 0x04],
-        ];
+        let expected = vec![vec![0x9c, 0x80, 0x01, 0x04]];
 
         let payloads = generator.generate(5, &[0x04]);
         assert!(payloads.is_some());
