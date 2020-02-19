@@ -1,3 +1,9 @@
+/// RTP packet version used by the library
+pub const PACKET_VERSION: u8 = 2;
+
+/// RTP packet header size
+pub const HEADER_SIZE: usize = 12;
+
 /// Total length of the RTP packet's header in bytes
 const HEADER_LENGHT: usize = 4;
 
