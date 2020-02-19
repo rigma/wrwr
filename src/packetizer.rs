@@ -64,6 +64,10 @@ where
 
         // Transforming RTP payloads into RTP packets
         let payloads = payloads.unwrap();
+        if payloads.len() == 0 {
+            return None;
+        }
+
         let packets: Vec<Packet> = payloads
             .iter()
             .enumerate()
