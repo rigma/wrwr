@@ -3,6 +3,7 @@ name = "wrwr-rtcp"
 description = ""
 version = "0.1.0"
 authors = ["rigma <rigbuntu@gmail.com>"]
+license = "MIT OR Apache-2.0"
 edition = "2018"
 
 [lib]
