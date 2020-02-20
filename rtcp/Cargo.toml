@@ -1,0 +1,11 @@
+[package]
+name = "wrwr-rtcp"
+description = ""
+version = "0.1.0"
+authors = ["rigma <rigbuntu@gmail.com>"]
+edition = "2018"
+
+[lib]
+name = "wrwr_rtcp"
+
+[dependencies]
