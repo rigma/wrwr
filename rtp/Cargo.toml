@@ -1,8 +1,12 @@
 [package]
-name = "rtp"
+name = "wrwr-rtp"
+description = ""
 version = "0.4.3"
 authors = ["rigma <rigbuntu@gmail.com>"]
 edition = "2018"
+
+[lib]
+name = "wrwr_rtp"
 
 [features]
 default = ["g711", "g722", "h264", "opus", "vp8", "vp9"]
