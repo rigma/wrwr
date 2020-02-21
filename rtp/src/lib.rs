@@ -3,6 +3,8 @@
 //! `rtp` crate provides an implementation of RTP protocol in Rust.
 
 extern crate chrono;
+#[macro_use]
+extern crate failure;
 
 pub mod codecs;
 pub mod packet;
