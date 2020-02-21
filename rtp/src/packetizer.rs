@@ -1,4 +1,8 @@
-use crate::{packet, Packet, PayloadGenerator, Sequencer};
+use crate::{
+    packet::{self, Packet},
+    PayloadGenerator,
+    Sequencer,
+};
 use chrono::Local;
 use rand::Rng;
 
