@@ -113,7 +113,7 @@ where
                 }
 
                 Packet {
-                    version: packet::PACKET_VERSION,
+                    version: packet::RTP_VERSION,
                     padding: false,
                     extension,
                     marker,

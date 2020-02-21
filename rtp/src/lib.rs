@@ -7,11 +7,13 @@ extern crate chrono;
 extern crate failure;
 
 pub mod codecs;
+pub mod errors;
 pub mod packet;
 pub mod packetizer;
 mod payload_generator;
 mod sequencer;
 
+pub use errors::RtpPacketError;
 pub use packet::Packet;
 pub use packetizer::{
     ExtensionNumber, G711Packetizer, G722Packetizer, H264Packetizer, OpusPacketizer, Packetizer,

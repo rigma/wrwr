@@ -1,5 +1,7 @@
+use crate::errors::RtpPacketError;
+
 /// RTP packet version used by the library
-pub const PACKET_VERSION: u8 = 2;
+pub const RTP_VERSION: u8 = 2;
 
 /// RTP packet header size
 pub const HEADER_SIZE: usize = 12;
@@ -193,14 +195,18 @@ pub struct Packet {
 impl Packet {
     /// Transforms a marshalled RTP packet into a parsed representation which can be used
     /// with the library. If the unmarshalling process fails, an error will be returned.
-    pub fn from_raw(raw_packet: &[u8]) -> Result<Self, ()> {
+    pub fn from_raw(raw_packet: &[u8]) -> Result<Self, RtpPacketError> {
         // If the packet lenght is lesser than the header's length, we return an error
         if raw_packet.len() < HEADER_LENGHT {
-            return Err(());
+            return Err(RtpPacketError::InvalidRtpPacket);
         }
 
         // Decoding the first byte of the packet (version, padding, extension and CC count)
         let version = (raw_packet[0] >> VERSION_SHIFT) & VERSION_MASK;
+        if version != RTP_VERSION {
+            return Err(RtpPacketError::InvalidRtpVersion { version });
+        }
+
         let padding = (raw_packet[0] >> PADDING_SHIFT) & PADDING_MASK > 0;
         let extension = (raw_packet[0] >> EXTENSION_SHIFT) & EXTENSION_MASK > 0;
         let cc = (raw_packet[0] & CC_MASK) as usize;
@@ -234,7 +240,7 @@ impl Packet {
         // Computing the current payload offset
         let mut payload_offset = CSRC_OFFSET + CSRC_LENGTH * cc;
         if raw_packet.len() < payload_offset {
-            return Err(());
+            return Err(RtpPacketError::InvalidRtpPacket);
         }
 
         // Decoding the contributing source identifiers
@@ -259,7 +265,7 @@ impl Packet {
         if extension {
             // If yes, we'll decode its profile and its payload
             if raw_packet.len() < payload_offset + 4 {
-                return Err(());
+                return Err(RtpPacketError::InvalidRtpPacket);
             }
 
             extension_profile = Some(
@@ -273,7 +279,7 @@ impl Packet {
             payload_offset += 2;
 
             if raw_packet.len() < payload_offset + extension_length {
-                return Err(());
+                return Err(RtpPacketError::InvalidRtpPacket);
             }
 
             extension_payload = Some(Vec::from(
@@ -306,7 +312,7 @@ impl Packet {
 
     /// Exports the current RTP packet into a marshalled representation suitable
     /// for network transmission.
-    pub fn to_raw(&self) -> Result<Vec<u8>, ()> {
+    pub fn to_raw(&self) -> Result<Vec<u8>, RtpPacketError> {
         // If a raw representation is already available, we'll return it
         if let Some(raw) = &self.raw {
             return Ok(raw.clone());
@@ -363,7 +369,9 @@ impl Packet {
         // If there is an extension, we'll add it to the buffer
         if let (Some(profile), Some(payload)) = (&self.extension_profile, &self.extension_payload) {
             if payload.len() % 4 > 0 {
-                return Err(());
+                return Err(RtpPacketError::InvalidRtpHeaderExtension {
+                    length: payload.len(),
+                });
             }
 
             let extension_size = (payload.len() / 4) as u16;
@@ -401,7 +409,7 @@ impl Packet {
     ///
     /// This method is similar to `Packet.to_raw`, but it will store the result of the export
     /// into the current packet if it's not available to avoid further computations.
-    pub fn to_raw_mut(&mut self) -> Result<Vec<u8>, ()> {
+    pub fn to_raw_mut(&mut self) -> Result<Vec<u8>, RtpPacketError> {
         let buffer = self.to_raw()?;
 
         if self.raw.is_none() {
