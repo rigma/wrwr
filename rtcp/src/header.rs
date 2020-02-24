@@ -103,7 +103,7 @@ impl fmt::Display for PacketType {
 
 /// Represents the header of a RTCP packet which are the 4 first bytes
 /// of a marshalled RTCP packet.
-/// 
+///
 /// As defined in [RFC 3550], this structure follows this data wire:
 ///
 /// ```text
@@ -116,7 +116,7 @@ impl fmt::Display for PacketType {
 /// |                               ...                             |
 /// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 /// ```
-/// 
+///
 /// ## Legends
 ///
 /// - `V` the `version` encoded on 2-bits word
