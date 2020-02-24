@@ -6,10 +6,15 @@
 pub trait Packet {
     /// Transformed a marshalled RTCP packet into a rusty
     /// representation.
-    fn from_raw(raw_packet: &[u8]) -> Self;
+    fn from_raw(raw_packet: &[u8]) -> Result<Self, ()>
+    where
+        Self: Sized;
 
     /// Exports the RTCP packet into a marshalled representation.
     fn to_raw(&self) -> Result<Vec<u8>, ()>;
+
+    /// Gets the length of the marshalled RTCP packet.
+    fn length(&self) -> usize;
 
     /// Retrieves the list of synchronization sources (SSRC) that
     /// this RTCP packet refers to.

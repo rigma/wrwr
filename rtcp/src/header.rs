@@ -3,7 +3,9 @@ use std::fmt;
 /// The version of the RTCP protocol implemented.
 pub const RTCP_VERSION: u8 = 2;
 
-const HEADER_LENGTH: usize = 4;
+/// The length of a RTCP packet header.
+pub const HEADER_LENGTH: usize = 4;
+
 const VERSION_MASK: u8 = 0x3;
 const VERSION_SHIFT: usize = 6;
 const PADDING_MASK: u8 = 0x1;
