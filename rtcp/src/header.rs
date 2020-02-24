@@ -178,7 +178,7 @@ impl Header {
     }
 
     /// Exports the current header into a marshalled RTCP packet header.
-    pub fn to_raw(&self) -> Result<Vec<u8>, ()> {
+    pub fn to_raw(self) -> Result<Vec<u8>, ()> {
         if self.report_count > 31 {
             return Err(());
         }
