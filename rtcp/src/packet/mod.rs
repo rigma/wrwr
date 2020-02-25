@@ -4,6 +4,9 @@ pub mod header;
 pub use goodbye::Goodbye;
 pub use header::Header;
 
+pub(self) const SSRC_LENGTH: usize = 4;
+pub(self) const SSRC_MAX_COUNT: usize = 0x1f;
+
 /// This trait is shared by all RTCP packets implemented in this
 /// library.
 ///

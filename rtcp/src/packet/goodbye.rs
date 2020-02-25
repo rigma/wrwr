@@ -1,7 +1,11 @@
 use super::{
     header::{self, Header, PacketType},
     Packet,
+    SSRC_LENGTH,
+    SSRC_MAX_COUNT,
 };
+
+const REASON_MAX_LENGTH: usize = 255;
 
 /// This structure represents the RTCP Goodbye packet. It is used
 /// to indicates that some sources are closing their RTP connection.
@@ -50,7 +54,7 @@ impl Packet for Goodbye {
             return Err(());
         }
 
-        let reason_offset = header::HEADER_LENGTH + (4 * header.report_count) as usize;
+        let reason_offset = header::HEADER_LENGTH + SSRC_LENGTH * header.report_count as usize;
         if reason_offset > raw_packet.len() {
             return Err(());
         }
@@ -74,7 +78,7 @@ impl Packet for Goodbye {
 
         let mut sources = Vec::with_capacity(header.report_count as usize);
         for i in 0..header.report_count as usize {
-            let offset = header::HEADER_LENGTH + 4usize * i;
+            let offset = header::HEADER_LENGTH + SSRC_LENGTH * i;
 
             let source = [
                 raw_packet[offset],
@@ -95,7 +99,7 @@ impl Packet for Goodbye {
     }
 
     fn to_raw(&self) -> Result<Vec<u8>, ()> {
-        if self.sources.len() > 255 {
+        if self.sources.len() > SSRC_MAX_COUNT {
             return Err(());
         }
 
@@ -108,18 +112,18 @@ impl Packet for Goodbye {
 
         output[..header::HEADER_LENGTH].copy_from_slice(&marshalled_header);
         self.sources.iter().enumerate().for_each(|(i, ssrc)| {
-            let offset = header::HEADER_LENGTH + 4usize * i;
+            let offset = header::HEADER_LENGTH + SSRC_LENGTH * i;
 
             output[offset..offset + 3].copy_from_slice(&ssrc.to_be_bytes());
         });
 
         if let Some(reason) = &self.reason {
             let reason = reason.as_bytes();
-            if reason.len() > 255 {
+            if reason.len() > REASON_MAX_LENGTH {
                 return Err(());
             }
 
-            let offset = header::HEADER_LENGTH + 4usize * self.sources.len();
+            let offset = header::HEADER_LENGTH + SSRC_LENGTH * self.sources.len();
             output[offset] = reason.len() as u8;
             output[offset + 1..offset + reason.len() + 1].copy_from_slice(reason);
         }
@@ -128,7 +132,7 @@ impl Packet for Goodbye {
     }
 
     fn length(&self) -> usize {
-        let mut length = header::HEADER_LENGTH + 4 * self.sources.len();
+        let mut length = header::HEADER_LENGTH + SSRC_LENGTH * self.sources.len();
         if let Some(reason) = &self.reason {
             length += reason.len() + 1;
         }
