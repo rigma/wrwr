@@ -136,7 +136,7 @@ pub struct Header {
     /// contained in the RTCP packet. Zero is a valid value for this field.
     pub report_count: u8,
 
-    /// The `paacket_type` is the constant defining the RTCP packet type.
+    /// The `packet_type` is the constant defining the RTCP packet type.
     /// You may see at `PacketType` enum for further information.
     pub packet_type: PacketType,
 

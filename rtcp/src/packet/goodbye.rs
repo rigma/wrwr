@@ -1,5 +1,7 @@
-use super::Packet;
-use crate::header::{self, Header, PacketType};
+use super::{
+    header::{self, Header, PacketType},
+    Packet,
+};
 
 /// This structure represents the RTCP Goodbye packet. It is used
 /// to indicates that some sources are closing their RTP connection.
@@ -208,7 +210,7 @@ mod tests {
         let raw = [
             0x81u8, 0xcbu8, 0x00u8, 0x0cu8, // V=2, P=0, RC=1, PT=BYE, length=12
             0x90u8, 0x2fu8, 0x9eu8, 0x2eu8, // SSRC=[0x902f9e2e]
-            0x01u8, 0x46u8,                 // length=1, reason="F"
+            0x01u8, 0x46u8, // length=1, reason="F"
         ];
 
         let packet = Goodbye::from_raw(&raw);

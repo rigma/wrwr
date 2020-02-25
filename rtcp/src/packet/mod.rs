@@ -1,6 +1,8 @@
 mod goodbye;
+pub mod header;
 
 pub use goodbye::Goodbye;
+pub use header::Header;
 
 /// This trait is shared by all RTCP packets implemented in this
 /// library.
