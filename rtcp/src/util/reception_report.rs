@@ -128,10 +128,12 @@ impl ReceptionReport {
             output[TOTAL_LOST_OFFSET + i] = (self.total_lost >> 8 * i) as u8;
         }
 
-
-        output[LAST_SEQUENCE_OFFSET..JITTER_OFFSET].copy_from_slice(&self.last_sequence_number.to_be_bytes());
-        output[JITTER_OFFSET..LAST_SENDER_REPORT_OFFSET].copy_from_slice(&self.jitter.to_be_bytes());
-        output[LAST_SENDER_REPORT_OFFSET..DELAY_OFFSET].copy_from_slice(&self.last_sender_report.to_be_bytes());
+        output[LAST_SEQUENCE_OFFSET..JITTER_OFFSET]
+            .copy_from_slice(&self.last_sequence_number.to_be_bytes());
+        output[JITTER_OFFSET..LAST_SENDER_REPORT_OFFSET]
+            .copy_from_slice(&self.jitter.to_be_bytes());
+        output[LAST_SENDER_REPORT_OFFSET..DELAY_OFFSET]
+            .copy_from_slice(&self.last_sender_report.to_be_bytes());
         output[DELAY_OFFSET..].copy_from_slice(&self.delay.to_be_bytes());
 
         Ok(output)
@@ -159,12 +161,8 @@ mod tests {
     #[test]
     fn it_parses_a_marshalled_reception_report() {
         let raw: [u8; RECEPTION_REPORT_LENGTH] = [
-            0x00, 0x00, 0x12, 0x34,
-            0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0xab, 0xcd,
-            0x00, 0x00, 0x00, 0x12,
-            0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x12, 0x34, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xab, 0xcd, 0x00, 0x00,
+            0x00, 0x12, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         ];
         let expected = ReceptionReport {
             synchronization_source: 0x1234,
@@ -195,12 +193,8 @@ mod tests {
             delay: 0x0,
         };
         let expected: Vec<u8> = vec![
-            0x00, 0x00, 0x12, 0x34,
-            0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0xab, 0xcd,
-            0x00, 0x00, 0x00, 0x12,
-            0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x12, 0x34, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xab, 0xcd, 0x00, 0x00,
+            0x00, 0x12, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         ];
 
         let raw = packet.to_raw();

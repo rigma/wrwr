@@ -1,8 +1,6 @@
 use super::{
     header::{self, Header, PacketType},
-    Packet,
-    SSRC_LENGTH,
-    SSRC_MAX_COUNT,
+    Packet, SSRC_LENGTH, SSRC_MAX_COUNT,
 };
 
 const REASON_MAX_LENGTH: usize = 255;

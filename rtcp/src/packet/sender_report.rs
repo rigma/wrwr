@@ -3,7 +3,7 @@ use crate::{
         header::{self, Header, PacketType},
         Packet,
     },
-    util::{ReceptionReport, RECEPTION_REPORT_LENGTH}
+    util::{ReceptionReport, RECEPTION_REPORT_LENGTH},
 };
 
 const SR_HEADER_LENGTH: usize = 24;
@@ -67,7 +67,9 @@ impl Packet for SenderReport {
                     return Err(());
                 }
 
-                if let Ok(report) = ReceptionReport::from_raw(&raw_packet[offset..offset + RECEPTION_REPORT_LENGTH]) {
+                if let Ok(report) =
+                    ReceptionReport::from_raw(&raw_packet[offset..offset + RECEPTION_REPORT_LENGTH])
+                {
                     reports.push(report);
                 } else {
                     return Err(());
@@ -79,8 +81,14 @@ impl Packet for SenderReport {
             return Err(());
         }
 
-        let profile_extensions = if (REPORTS_OFFSET + RECEPTION_REPORT_LENGTH * header.report_count as usize) < raw_packet.len() {
-            Some(Vec::from(&raw_packet[REPORTS_OFFSET + RECEPTION_REPORT_LENGTH * header.report_count as usize..]))
+        let profile_extensions = if (REPORTS_OFFSET
+            + RECEPTION_REPORT_LENGTH * header.report_count as usize)
+            < raw_packet.len()
+        {
+            Some(Vec::from(
+                &raw_packet
+                    [REPORTS_OFFSET + RECEPTION_REPORT_LENGTH * header.report_count as usize..],
+            ))
         } else {
             None
         };
@@ -129,16 +137,18 @@ impl Packet for SenderReport {
     }
 
     fn length(&self) -> usize {
-        let mut length = header::HEADER_LENGTH + SR_HEADER_LENGTH + self.reports.len() * RECEPTION_REPORT_LENGTH;
+        let mut length =
+            header::HEADER_LENGTH + SR_HEADER_LENGTH + self.reports.len() * RECEPTION_REPORT_LENGTH;
         if let Some(profile_extensions) = &self.profile_extensions {
             length += profile_extensions.len();
         }
-        
+
         length
     }
 
     fn synchronization_sources(&self) -> Vec<u32> {
-        self.reports.iter()
+        self.reports
+            .iter()
             .map(|report| report.synchronization_source)
             .collect()
     }
@@ -167,29 +177,17 @@ mod tests {
     fn it_unmarshalls_a_sender_report_packet() {
         let raw = [
             // v=2, p=0, count=1, SR, len=7
-            0x81, 0xc8, 0x0, 0x7,
-            // ssrc=0x902f9e2e
-            0x90, 0x2f, 0x9e, 0x2e,
-            // ntp=0xda8bd1fcdddda05a
-            0xda, 0x8b, 0xd1, 0xfc,
-            0xdd, 0xdd, 0xa0, 0x5a,
-            // rtp=0xaaf4edd5
-            0xaa, 0xf4, 0xed, 0xd5,
-            // packetCount=1
-            0x00, 0x00, 0x00, 0x01,
-            // octetCount=2
-            0x00, 0x00, 0x00, 0x02,
-            // ssrc=0xbc5e9a40
-            0xbc, 0x5e, 0x9a, 0x40,
-            // fracLost=0, totalLost=0
-            0x0, 0x0, 0x0, 0x0,
-            // lastSeq=0x46e1
-            0x0, 0x0, 0x46, 0xe1,
-            // jitter=273
-            0x0, 0x0, 0x1, 0x11,
-            // lsr=0x9f36432
-            0x9, 0xf3, 0x64, 0x32,
-            // delay=150137
+            0x81, 0xc8, 0x0, 0x7, // ssrc=0x902f9e2e
+            0x90, 0x2f, 0x9e, 0x2e, // ntp=0xda8bd1fcdddda05a
+            0xda, 0x8b, 0xd1, 0xfc, 0xdd, 0xdd, 0xa0, 0x5a, // rtp=0xaaf4edd5
+            0xaa, 0xf4, 0xed, 0xd5, // packetCount=1
+            0x00, 0x00, 0x00, 0x01, // octetCount=2
+            0x00, 0x00, 0x00, 0x02, // ssrc=0xbc5e9a40
+            0xbc, 0x5e, 0x9a, 0x40, // fracLost=0, totalLost=0
+            0x0, 0x0, 0x0, 0x0, // lastSeq=0x46e1
+            0x0, 0x0, 0x46, 0xe1, // jitter=273
+            0x0, 0x0, 0x1, 0x11, // lsr=0x9f36432
+            0x9, 0xf3, 0x64, 0x32, // delay=150137
             0x0, 0x2, 0x4a, 0x79,
         ];
         let expected = SenderReport {
@@ -204,17 +202,15 @@ mod tests {
             rtp_time: 0xaaf4edd5,
             byte_count: 2,
             packet_count: 1,
-            reports: vec![
-                ReceptionReport {
-                    synchronization_source: 0xbc5e9a40,
-                    fraction_lost: 0,
-                    total_lost: 0,
-                    last_sequence_number: 0x46e1,
-                    jitter: 273,
-                    last_sender_report: 0x9f36432,
-                    delay: 150137,
-                },
-            ],
+            reports: vec![ReceptionReport {
+                synchronization_source: 0xbc5e9a40,
+                fraction_lost: 0,
+                total_lost: 0,
+                last_sequence_number: 0x46e1,
+                jitter: 273,
+                last_sender_report: 0x9f36432,
+                delay: 150137,
+            }],
             profile_extensions: None,
         };
         let packet = SenderReport::from_raw(&raw);
