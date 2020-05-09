@@ -1,8 +1,10 @@
 mod goodbye;
 pub mod header;
+mod sender_report;
 
 pub use goodbye::Goodbye;
 pub use header::Header;
+pub use sender_report::SenderReport;
 
 pub(self) const SSRC_LENGTH: usize = 4;
 pub(self) const SSRC_MAX_COUNT: usize = 0x1f;
