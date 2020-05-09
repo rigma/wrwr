@@ -129,7 +129,7 @@ impl Packet for SenderReport {
         }
 
         if let Some(profile_extensions) = &self.profile_extensions {
-            let offset = REPORTS_OFFSET / RECEPTION_REPORT_LENGTH * self.reports.len();
+            let offset = REPORTS_OFFSET + RECEPTION_REPORT_LENGTH * self.reports.len();
             output[offset..].copy_from_slice(profile_extensions);
         }
 
