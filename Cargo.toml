@@ -1,2 +1,2 @@
 [workspace]
-members = ["rtp", "rtcp"]
+members = ["rtp", "rtcp", "serde"]
