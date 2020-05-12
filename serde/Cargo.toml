@@ -12,3 +12,4 @@ name = "wrwr_serde"
 
 [dependencies]
 serde = "1.0.110"
+thiserror = "1.0.16"
