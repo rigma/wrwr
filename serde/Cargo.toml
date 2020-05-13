@@ -11,5 +11,5 @@ publish = false
 name = "wrwr_serde"
 
 [dependencies]
-serde = "1.0.110"
+serde = { version = "1.0.110", features = ["derive"] }
 thiserror = "1.0.16"
