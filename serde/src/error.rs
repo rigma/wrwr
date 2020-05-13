@@ -7,6 +7,8 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub enum Error {
     #[error("An error was emitted from the reader/writer used during serialization/deserialization process!")]
     Io(#[from] io::Error),
+    #[error("A sequence, tuple or a map has tried to serialize/deserialize more element that anticipated!")]
+    SizeLimit(usize),
     #[error("A custom error was emitted from Serde. Message: {0}")]
     Custom(String),
 }
