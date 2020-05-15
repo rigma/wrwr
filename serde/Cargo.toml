@@ -13,3 +13,4 @@ name = "wrwr_serde"
 [dependencies]
 serde = { version = "1.0.110", features = ["derive"] }
 thiserror = "1.0.16"
+wrwr-serde-derive = { path = "../serde-derive" }
