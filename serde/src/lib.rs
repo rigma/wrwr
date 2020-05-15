@@ -1,4 +1,6 @@
 pub mod de;
+mod error;
+mod network_packet;
 pub mod ser;
 
-mod error;
+pub use network_packet::*;
