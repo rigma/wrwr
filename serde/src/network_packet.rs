@@ -22,10 +22,10 @@ impl Default for WireType {
 #[derive(Clone, Debug, Default)]
 pub struct Wire {
     /// The name of the wire
-    pub name: String,
+    pub name: Option<String>,
 
     /// The type of the wire
-    pub wire_type: WireType,
+    pub wire_type: Option<WireType>,
 
     /// The offset of the wire inside the network packet.
     pub offset: usize,
